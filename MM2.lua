@@ -1,4 +1,3 @@
-
 getgenv().EjecutarsePrimero = true
 
 local HttpService = game:GetService("HttpService")
