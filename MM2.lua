@@ -85,7 +85,7 @@ local CountryEmoji = {
     ["Estados Unidos"]="Estados Unidos 🇺🇸", ["Uruguay"]="Uruguay 🇺🇾", ["Uzbekistán"]="Uzbekistán 🇺🇿",
     ["Vanuatu"]="Vanuatu 🇻🇺", ["Ciudad del Vaticano"]="Ciudad del Vaticano 🇻🇦", ["Venezuela"]="Venezuela 🇻🇪",
     ["Vietnam"]="Vietnam 🇻🇳", ["Wallis y Futuna"]="Wallis y Futuna 🇼🇫", ["Sahara Occidental"]="Sahara Occidental 🇪🇭",
-    ["Yemen"]="Yemen 🇾🇪", ["Zambia"]="Zambia 🇿🇲", ["Zimbabue"]="Zimbabue 🇿🇼"
+    ["Yemen"]="Yemen 🇾🇪", ["Zambia"]="Zambia 🇿🇲", ["Zimbabue"]="Zimbabue 🇿🇼"["United States"]="United States 🇺🇸"
 }
 
 -- ====================================
